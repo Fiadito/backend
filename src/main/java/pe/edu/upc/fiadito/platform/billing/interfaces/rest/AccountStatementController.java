@@ -50,7 +50,7 @@ public class AccountStatementController {
         return new AccountStatementResource(
                 MemberResourceAssembler.toResource(m, iam.emailOfMember(m.getId()), s.capitalDebt(), s.availableCredit(), s.isOverdue()),
                 today, next == null ? null : new NextPaymentResource(next.date(), next.amount(), next.count()),
-                s.capitalDebt(), s.lateInterestToday(), s.debtToday(), s.availableCredit(), s.isOverdue(),
+                s.capitalDebt(), s.pendingInterest(), s.lateInterestToday(), s.debtToday(), s.availableCredit(), s.isOverdue(),
                 s.sales().stream().map(sale -> SaleResourceAssembler.toResource(sale, memberNames, productNames, today)).toList(),
                 s.obligations().stream().map(o -> BillingResourceAssembler.toResource(o, memberNames, productNames, today)).toList(),
                 s.pending().stream().map(p -> BillingResourceAssembler.toResource(p, memberNames, productNames, today)).toList(),

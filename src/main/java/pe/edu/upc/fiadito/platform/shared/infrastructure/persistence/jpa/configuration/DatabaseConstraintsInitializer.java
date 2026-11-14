@@ -38,14 +38,18 @@ public class DatabaseConstraintsInitializer {
         CONSTRAINTS.put("fk_pago_socio", "ALTER TABLE pago ADD CONSTRAINT fk_pago_socio FOREIGN KEY (id_socio) REFERENCES socio (id_socio)");
         CONSTRAINTS.put("fk_bitacora_negocio", "ALTER TABLE bitacora ADD CONSTRAINT fk_bitacora_negocio FOREIGN KEY (id_negocio) REFERENCES negocio (id_negocio)");
         CONSTRAINTS.put("fk_bitacora_usuario", "ALTER TABLE bitacora ADD CONSTRAINT fk_bitacora_usuario FOREIGN KEY (id_usuario) REFERENCES usuario (id_usuario)");
-        CONSTRAINTS.put("ck_socio_tasa_mora", "ALTER TABLE socio ADD CONSTRAINT ck_socio_tasa_mora CHECK (valor_tasa_mora >= 0.40)");
-        CONSTRAINTS.put("ck_socio_periodo", "ALTER TABLE socio ADD CONSTRAINT ck_socio_periodo CHECK (periodo_tasa_mora IN ('TEA','TES','TET','TEM','TEQ'))");
+        CONSTRAINTS.put("fk_combo_item_producto", "ALTER TABLE combo_item ADD CONSTRAINT fk_combo_item_producto FOREIGN KEY (id_producto) REFERENCES producto (id_producto)");
         CONSTRAINTS.put("ck_socio_limite", "ALTER TABLE socio ADD CONSTRAINT ck_socio_limite CHECK (limite_credito BETWEEN 400 AND 1000)");
         CONSTRAINTS.put("ck_socio_cuotas", "ALTER TABLE socio ADD CONSTRAINT ck_socio_cuotas CHECK (max_cuotas BETWEEN 1 AND 8)");
         CONSTRAINTS.put("ck_producto_precios", "ALTER TABLE producto ADD CONSTRAINT ck_producto_precios CHECK (precio_contado > 0 AND precio_lista >= precio_contado)");
+        CONSTRAINTS.put("ck_producto_tipo", "ALTER TABLE producto ADD CONSTRAINT ck_producto_tipo CHECK (tipo IN ('PRODUCTO','COMBO'))");
+        CONSTRAINTS.put("ck_combo_item_cantidad", "ALTER TABLE combo_item ADD CONSTRAINT ck_combo_item_cantidad CHECK (cantidad >= 1)");
         CONSTRAINTS.put("ck_venta_monto", "ALTER TABLE venta ADD CONSTRAINT ck_venta_monto CHECK (monto BETWEEN 400 AND 1000)");
         CONSTRAINTS.put("ck_venta_cuotas", "ALTER TABLE venta ADD CONSTRAINT ck_venta_cuotas CHECK (n_cuotas BETWEEN 1 AND 8)");
+        CONSTRAINTS.put("ck_venta_periodo", "ALTER TABLE venta ADD CONSTRAINT ck_venta_periodo CHECK (periodo_tasa IN ('TEA','TES','TET','TEM','TEQ'))");
+        CONSTRAINTS.put("ck_venta_tasa", "ALTER TABLE venta ADD CONSTRAINT ck_venta_tasa CHECK (valor_tasa > 0)");
         CONSTRAINTS.put("ck_pago_medio", "ALTER TABLE pago ADD CONSTRAINT ck_pago_medio CHECK (medio_pago IN ('EFECTIVO','YAPE','PLIN','TRANSFERENCIA'))");
+        CONSTRAINTS.put("ck_pago_periodo_mora", "ALTER TABLE pago ADD CONSTRAINT ck_pago_periodo_mora CHECK (periodo_tasa_mora IS NULL OR periodo_tasa_mora IN ('TEA','TES','TET','TEM','TEQ'))");
     }
 
     @Order(1)

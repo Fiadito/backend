@@ -36,7 +36,7 @@ public class MemberCommandServiceImpl implements MemberCommandService {
         var hasAccess = c.email() != null && !c.email().isBlank();
         if (hasAccess && iam.emailExists(c.email())) throw new ConflictException("Ya existe una cuenta con ese correo.");
         var member = repository.save(new Member(c.businessId(), c.dni(), c.fullName(), c.phone(), c.address(), c.currency(),
-                c.lateRatePeriod(), c.lateRateValue(), c.creditLimit(), c.maxInstallments()));
+                c.creditLimit(), c.maxInstallments()));
         if (hasAccess) iam.createMemberAccount(c.businessId(), member.getId(), member.getFullName(), c.email(), c.password());
         events.publishEvent(new OperationPerformedEvent(c.businessId(), actorUserId, actorName, "REGISTRAR", "SOCIO", member.getId(),
                 "Registro del socio " + member.getFullName() + " (DNI " + member.getDni() + ")"));
@@ -47,8 +47,8 @@ public class MemberCommandServiceImpl implements MemberCommandService {
     public Member handle(UpdateMemberCommand c, Long actorUserId, String actorName) {
         var member = find(c.businessId(), c.memberId());
         if (repository.existsByBusinessIdAndDniAndIdNot(c.businessId(), c.dni(), c.memberId())) throw new ConflictException("Ya existe un socio con ese DNI.");
-        member.update(c.dni(), c.fullName(), c.phone(), c.address(), c.currency(), c.lateRatePeriod(), c.lateRateValue(),
-                c.creditLimit(), c.maxInstallments());
+        member.update(c.dni(), c.fullName(), c.phone(), c.address(), c.currency(), c.creditLimit(), c.maxInstallments(),
+                credit.pendingDebtOf(member.getId()));
         iam.renameMemberAccount(member.getId(), member.getFullName());
         events.publishEvent(new OperationPerformedEvent(c.businessId(), actorUserId, actorName, "EDITAR", "SOCIO", member.getId(),
                 "Edición del socio " + member.getFullName()));

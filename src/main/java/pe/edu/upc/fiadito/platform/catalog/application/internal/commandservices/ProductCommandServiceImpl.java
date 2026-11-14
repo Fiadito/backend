@@ -7,7 +7,9 @@ import org.springframework.transaction.annotation.Transactional;
 import pe.edu.upc.fiadito.platform.catalog.domain.model.aggregates.Product;
 import pe.edu.upc.fiadito.platform.catalog.domain.model.commands.ChangeProductStatusCommand;
 import pe.edu.upc.fiadito.platform.catalog.domain.model.commands.SaveProductCommand;
+import pe.edu.upc.fiadito.platform.catalog.domain.model.valueobjects.ProductType;
 import pe.edu.upc.fiadito.platform.catalog.domain.services.ProductCommandService;
+import pe.edu.upc.fiadito.platform.shared.domain.exceptions.BusinessRuleException;
 import pe.edu.upc.fiadito.platform.catalog.infrastructure.persistence.jpa.repositories.ProductRepository;
 import pe.edu.upc.fiadito.platform.membership.domain.model.valueobjects.RecordStatus;
 import pe.edu.upc.fiadito.platform.shared.domain.exceptions.ResourceNotFoundException;
@@ -23,21 +25,34 @@ public class ProductCommandServiceImpl implements ProductCommandService {
 
     @Override
     public Product handle(SaveProductCommand c, Long actorUserId, String actorName) {
+        if (c.type() == ProductType.COMBO) validateComboContents(c);
         Product product;
         String action;
         if (c.productId() == null) {
-            product = repository.save(new Product(c.businessId(), c.description(), c.brand(), c.supplier(), c.unit(), c.imageUrl(),
-                    c.cashPrice(), c.listPrice(), c.saleMode()));
+            product = repository.save(new Product(c.businessId(), c.type(), c.description(), c.brand(), c.supplier(), c.unit(), c.imageUrl(),
+                    c.cashPrice(), c.listPrice(), c.saleMode(), c.items()));
             action = "REGISTRAR";
         } else {
             product = find(c.businessId(), c.productId());
-            product.update(c.description(), c.brand(), c.supplier(), c.unit(), c.imageUrl(), c.cashPrice(), c.listPrice(), c.saleMode());
+            product.update(c.type(), c.description(), c.brand(), c.supplier(), c.unit(), c.imageUrl(), c.cashPrice(), c.listPrice(),
+                    c.saleMode(), c.items());
             product = repository.save(product);
             action = "EDITAR";
         }
         events.publishEvent(new OperationPerformedEvent(c.businessId(), actorUserId, actorName, action, "PRODUCTO", product.getId(),
-                (c.productId() == null ? "Registro" : "Edición") + " del producto " + product.getDescription()));
+                (c.productId() == null ? "Registro" : "Edición") + (product.isCombo() ? " del combo " : " del producto ") + product.getDescription()));
         return product;
+    }
+
+    /** El contenido de un combo son productos sueltos del mismo negocio (no otros combos ni el propio combo). */
+    private void validateComboContents(SaveProductCommand c) {
+        if (c.items() == null) return;
+        for (var item : c.items()) {
+            if (item.getProductId() == null) continue;
+            var product = repository.findByIdAndBusinessId(item.getProductId(), c.businessId())
+                    .orElseThrow(() -> new BusinessRuleException("El producto " + item.getProductId() + " del combo no existe."));
+            if (product.isCombo()) throw new BusinessRuleException("Un combo no puede contener otro combo.");
+        }
     }
 
     @Override

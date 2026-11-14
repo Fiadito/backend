@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Fachada del contexto Membership para Credit y Billing (condiciones de crédito y tasa moratoria del socio).
+ * Fachada del contexto Membership para Credit y Billing (condiciones de crédito del socio).
  */
 @Service
 @RequiredArgsConstructor
@@ -29,5 +29,11 @@ public class MembershipContextFacade {
 
     public List<Member> membersOf(Long businessId) {
         return repository.findAllByBusinessIdOrderByFullNameAsc(businessId);
+    }
+
+    /** Bloquea al socio dentro de la transacción de la venta (si no existe, la simulación lo reporta). */
+    @Transactional
+    public void lockMember(Long businessId, Long memberId) {
+        repository.findForUpdate(memberId, businessId);
     }
 }

@@ -19,7 +19,7 @@ public class CreditContextFacade {
 
     private final CreditSaleRepository repository;
 
-    /** DeudaCapital(socio): cuotas y pagos únicos sin pagar. */
+    /** DeudaCapital(socio): capital de las cuotas y pagos únicos sin pagar. */
     @Transactional(readOnly = true)
     public BigDecimal pendingCapitalOf(Long memberId) {
         return repository.findAllByMemberId(memberId).stream().map(CreditSale::pendingCapital).reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -38,6 +38,13 @@ public class CreditContextFacade {
     @Transactional(readOnly = true)
     public CreditSale findSale(Long businessId, Long saleId) {
         return repository.findByIdAndBusinessId(saleId, businessId)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontró la venta " + saleId + "."));
+    }
+
+    /** Bloquea la venta dentro de la transacción del pago: un segundo pago simultáneo espera y luego ve la obligación pagada. */
+    @Transactional
+    public CreditSale lockSale(Long businessId, Long saleId) {
+        return repository.findForUpdate(saleId, businessId)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontró la venta " + saleId + "."));
     }
 

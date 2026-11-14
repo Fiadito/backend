@@ -10,13 +10,12 @@ import pe.edu.upc.fiadito.platform.membership.domain.model.valueobjects.Currency
 import pe.edu.upc.fiadito.platform.membership.domain.model.valueobjects.RecordStatus;
 import pe.edu.upc.fiadito.platform.shared.domain.exceptions.BusinessRuleException;
 import pe.edu.upc.fiadito.platform.shared.domain.model.aggregates.AuditableAbstractAggregateRoot;
-import pe.edu.upc.fiadito.platform.shared.domain.model.valueobjects.EffectiveRate;
-import pe.edu.upc.fiadito.platform.shared.domain.model.valueobjects.RatePeriod;
 
 import java.math.BigDecimal;
 
 /**
  * Agregado SOCIO: datos del socio y sus condiciones de crédito (módulo 7.4, GuardarSocio).
+ * Las tasas ya no son del socio: la tasa efectiva se pacta en cada venta y la moratoria se coloca al pagar algo vencido.
  */
 @Entity
 @Table(name = "socio", uniqueConstraints = @UniqueConstraint(name = "uk_socio_negocio_dni", columnNames = {"id_negocio", "dni"}))
@@ -45,14 +44,6 @@ public class Member extends AuditableAbstractAggregateRoot<Member> {
     @Column(name = "moneda", nullable = false, length = 3)
     private Currency currency;
 
-    @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.VARCHAR)
-    @Column(name = "periodo_tasa_mora", nullable = false, length = 3)
-    private RatePeriod lateRatePeriod;
-
-    @Column(name = "valor_tasa_mora", nullable = false, precision = 10, scale = 7)
-    private BigDecimal lateRateValue;
-
     @Column(name = "limite_credito", nullable = false, precision = 10, scale = 2)
     private BigDecimal creditLimit;
 
@@ -65,24 +56,27 @@ public class Member extends AuditableAbstractAggregateRoot<Member> {
     private RecordStatus status;
 
     public Member(Long businessId, String dni, String fullName, String phone, String address, Currency currency,
-                  RatePeriod lateRatePeriod, BigDecimal lateRateValue, BigDecimal creditLimit, Integer maxInstallments) {
+                  BigDecimal creditLimit, Integer maxInstallments) {
         this.businessId = businessId;
         this.status = RecordStatus.ACTIVO;
-        update(dni, fullName, phone, address, currency, lateRatePeriod, lateRateValue, creditLimit, maxInstallments);
+        update(dni, fullName, phone, address, currency, creditLimit, maxInstallments, BigDecimal.ZERO);
     }
 
-    /** Aplica y valida los datos del socio. */
+    /**
+     * Aplica y valida los datos del socio.
+     *
+     * @param currentDebt capital que el socio debe hoy: el límite no puede quedar por debajo
+     */
     public void update(String dni, String fullName, String phone, String address, Currency currency,
-                       RatePeriod lateRatePeriod, BigDecimal lateRateValue, BigDecimal creditLimit, Integer maxInstallments) {
+                       BigDecimal creditLimit, Integer maxInstallments, BigDecimal currentDebt) {
         var cleanPhone = phone == null ? "" : phone.replaceAll("\\s", "");
         if (dni == null || !dni.matches("\\d{8}")) throw new BusinessRuleException("El DNI debe tener 8 dígitos.");
         if (fullName == null || fullName.trim().length() < 3) throw new BusinessRuleException("Ingresa los nombres y apellidos del socio.");
         if (!cleanPhone.isEmpty() && !cleanPhone.matches("9\\d{8}")) throw new BusinessRuleException("El celular debe tener 9 dígitos y empezar con 9.");
-        if (lateRatePeriod == null) throw new BusinessRuleException("Selecciona el periodo de la tasa moratoria.");
-        if (lateRateValue == null || lateRateValue.compareTo(CreditPolicy.MIN_LATE_RATE) < 0)
-            throw new BusinessRuleException("La tasa moratoria debe ser como mínimo 40 %.");
         if (creditLimit == null || !CreditPolicy.isAmountInRange(creditLimit))
             throw new BusinessRuleException("El límite debe estar entre S/ 400.00 y S/ 1,000.00.");
+        if (currentDebt != null && creditLimit.compareTo(currentDebt) < 0)
+            throw new BusinessRuleException("El límite no puede ser menor que la deuda actual del socio (S/ " + currentDebt.setScale(2) + ").");
         if (maxInstallments == null || maxInstallments < 1 || maxInstallments > CreditPolicy.MAX_INSTALLMENTS)
             throw new BusinessRuleException("Las cuotas máximas deben estar entre 1 y 8.");
         this.dni = dni;
@@ -90,18 +84,12 @@ public class Member extends AuditableAbstractAggregateRoot<Member> {
         this.phone = cleanPhone.isEmpty() ? null : cleanPhone;
         this.address = address == null ? null : address.trim();
         this.currency = currency == null ? Currency.PEN : currency;
-        this.lateRatePeriod = lateRatePeriod;
-        this.lateRateValue = lateRateValue;
         this.creditLimit = creditLimit;
         this.maxInstallments = maxInstallments;
     }
 
     public boolean isActive() {
         return status == RecordStatus.ACTIVO;
-    }
-
-    public EffectiveRate lateRate() {
-        return new EffectiveRate(lateRatePeriod, lateRateValue);
     }
 
     /** DarDeBajaSocio: solo si no tiene deuda pendiente. */

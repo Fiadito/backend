@@ -5,9 +5,10 @@ import pe.edu.upc.fiadito.platform.credit.domain.model.valueobjects.ScheduleRow;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-public record ScheduleRowResource(Integer numero, LocalDate fechaVencimiento, BigDecimal saldoInicial, BigDecimal amortizacion,
-                                  BigDecimal montoCuota, BigDecimal saldoFinal) {
+public record ScheduleRowResource(Integer numero, LocalDate fechaVencimiento, BigDecimal saldoInicial, BigDecimal interes,
+                                  BigDecimal amortizacion, BigDecimal montoCuota, BigDecimal saldoFinal) {
     public static ScheduleRowResource from(ScheduleRow r) {
-        return new ScheduleRowResource(r.number(), r.dueDate(), r.openingBalance(), r.amortization(), r.amount(), r.closingBalance());
+        return new ScheduleRowResource(r.number(), r.dueDate(), r.openingBalance(), r.interest(), r.amortization(), r.amount(),
+                r.closingBalance());
     }
 }

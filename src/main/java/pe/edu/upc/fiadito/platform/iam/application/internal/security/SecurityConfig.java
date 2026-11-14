@@ -33,7 +33,9 @@ public class SecurityConfig {
 
     private static final String[] PUBLIC = {
             "/api/v1/auth/login", "/api/v1/auth/registro-negocio",
-            "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/actuator/health"
+            "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/actuator/health",
+            // Página de errores de Spring: si no es pública, un 404/405/500 llega al frontend como 401 y cierra la sesión.
+            "/error"
     };
 
     @Bean

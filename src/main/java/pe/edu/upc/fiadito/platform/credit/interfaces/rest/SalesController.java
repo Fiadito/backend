@@ -9,6 +9,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import pe.edu.upc.fiadito.platform.catalog.interfaces.acl.CatalogContextFacade;
 import pe.edu.upc.fiadito.platform.credit.domain.model.aggregates.CreditSale;
+import pe.edu.upc.fiadito.platform.credit.domain.model.commands.ChangeSaleRateCommand;
 import pe.edu.upc.fiadito.platform.credit.domain.model.commands.RegisterSaleCommand;
 import pe.edu.upc.fiadito.platform.credit.domain.model.commands.SimulateSaleCommand;
 import pe.edu.upc.fiadito.platform.credit.domain.services.CreditSaleCommandService;
@@ -49,6 +50,14 @@ public class SalesController {
     public ResponseEntity<SaleResource> register(@AuthenticationPrincipal CurrentUser user, @RequestBody SaleRequestResource body) {
         var sale = commandService.handle(new RegisterSaleCommand(user.businessId(), body.toRequest()), user.userId(), user.name());
         return ResponseEntity.status(HttpStatus.CREATED).body(toResource(user.businessId(), sale));
+    }
+
+    @Operation(summary = "Cambia la tasa efectiva de la venta: las cuotas pendientes se recalculan desde su saldo")
+    @PatchMapping("/ventas/{id}/tasa")
+    public SaleResource changeRate(@AuthenticationPrincipal CurrentUser user, @PathVariable Long id, @RequestBody ChangeRateResource body) {
+        var sale = commandService.handle(new ChangeSaleRateCommand(user.businessId(), id, body.periodoTasa(), body.valorTasa()),
+                user.userId(), user.name());
+        return toResource(user.businessId(), sale);
     }
 
     @Operation(summary = "Lista las ventas del negocio (opcional: de un socio)")

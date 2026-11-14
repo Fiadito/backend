@@ -24,8 +24,7 @@ public class BillingResourceAssembler {
                 memberNames.getOrDefault(sale.getMemberId(), ""), sale.getProductId(), productNames.getOrDefault(sale.getProductId(), ""),
                 sale.getQuantity(), sale.getPurchaseDateTime(), sale.getAmount(), o.label(),
                 installment == null ? 1 : installment.getNumber(), sale.getInstallmentCount(), o.dueDate(),
-                installment == null ? o.amount() : installment.getOpeningBalance(),
-                installment == null ? o.amount() : installment.getAmortization(), o.amount(),
+                installment == null ? sale.getAmount() : installment.getOpeningBalance(), o.interest(), o.capital(), o.amount(),
                 installment == null ? BigDecimal.ZERO.setScale(2) : installment.getClosingBalance(), o.statusOn(today).name());
     }
 
@@ -42,7 +41,9 @@ public class BillingResourceAssembler {
         return new PaymentResource(p.getId(), p.getBusinessId(), p.getSaleId(), p.getInstallmentId(), p.getMemberId(),
                 memberNames.getOrDefault(p.getMemberId(), ""),
                 obligation == null ? "" : productNames.getOrDefault(obligation.sale().getProductId(), ""),
-                obligation == null ? "" : obligation.label(), p.getPaymentDate(), p.getLateDays(), p.getLateDailyRate(), p.getLateInterest(),
-                p.getTotalPaid(), p.getLateImputation(), p.getCapitalImputation(), p.getMethod().name(), p.getRegisteredAt());
+                obligation == null ? "" : obligation.label(), p.getPaymentDate(), p.getLateDays(),
+                p.getLateRatePeriod() == null ? null : p.getLateRatePeriod().name(), p.getLateRateValue(), p.getLateDailyRate(),
+                p.getLateInterest(), p.getTotalPaid(), p.getLateImputation(), p.getInterestImputation(), p.getCapitalImputation(),
+                p.getMethod().name(), p.getRegisteredAt());
     }
 }

@@ -30,9 +30,19 @@ public record Obligation(CreditSale sale, Installment installment, Payment payme
         return installment != null ? installment.getDueDate() : sale.getPaymentDate();
     }
 
-    /** D: monto exigible en la fecha de pago. */
+    /** D: monto exigible en la fecha de pago (interés compensatorio + capital). */
     public BigDecimal amount() {
         return installment != null ? installment.getAmount() : sale.getTotalToPay();
+    }
+
+    /** Interés compensatorio incluido en D. */
+    public BigDecimal interest() {
+        return installment != null ? installment.getInterest() : sale.getInterestTotal();
+    }
+
+    /** Capital (amortización) incluido en D. */
+    public BigDecimal capital() {
+        return installment != null ? installment.getAmortization() : sale.getAmount();
     }
 
     public String label() {

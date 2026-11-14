@@ -8,7 +8,6 @@ import java.math.BigDecimal;
 public class MemberResourceAssembler {
     public static MemberResource toResource(Member m, String email, BigDecimal debt, BigDecimal available, boolean overdue) {
         return new MemberResource(m.getId(), m.getBusinessId(), m.getDni(), m.getFullName(), m.getPhone(), m.getAddress(),
-                m.getCurrency().name(), m.getLateRatePeriod().name(), m.getLateRateValue(), m.lateRate().toDaily(), m.getCreditLimit(),
-                m.getMaxInstallments(), m.getStatus().name(), email, debt, available, overdue);
+                m.getCurrency().name(), m.getCreditLimit(), m.getMaxInstallments(), m.getStatus().name(), email, debt, available, overdue);
     }
 }

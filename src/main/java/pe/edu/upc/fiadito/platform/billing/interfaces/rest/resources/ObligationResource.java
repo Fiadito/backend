@@ -7,11 +7,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * Obligación (cuota o pago único) con los datos de su plan de pagos y su estado.
+ * Obligación (cuota o pago único) con los datos de su plan de pagos (interés, amortización y cuota) y su estado.
  */
 public record ObligationResource(String clave, String codigo, Long idVenta, Long idCuota, Long idSocio, String nombreSocio,
                                  Long idProducto, String producto, Integer cantidad,
                                  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime fechaHoraCompra,
                                  BigDecimal montoCompra, String concepto, Integer numero, Integer nCuotas, LocalDate fechaVencimiento,
-                                 BigDecimal saldoInicial, BigDecimal amortizacion, BigDecimal monto, BigDecimal saldoFinal, String estado) {
+                                 BigDecimal saldoInicial, BigDecimal interes, BigDecimal amortizacion, BigDecimal monto,
+                                 BigDecimal saldoFinal, String estado) {
 }

@@ -4,12 +4,15 @@ import pe.edu.upc.fiadito.platform.shared.domain.model.valueobjects.EffectiveRat
 import pe.edu.upc.fiadito.platform.shared.domain.model.valueobjects.Rounding;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
 /**
- * Servicio de dominio: interés moratorio e imputación del pago (fórmulas 6 y 7, módulo 7.9).
- * dm = Freal − Fpago; Imor = D × ((1 + TED_mor)^dm − 1); Total = D + Imor; imputación: mora → capital.
+ * Servicio de dominio: interés moratorio e imputación del pago (módulo 7.9).
+ * Solo hay mora si el pago es posterior al vencimiento: dm = Freal − Fvencimiento;
+ * TED = (1 + TEP_mor)^(1/N) − 1; Imor = D × ((1 + TED)^dm − 1); Total = D + Imor.
+ * Imputación: mora → interés compensatorio de la cuota → capital (amortización).
  */
 public final class LateInterest {
 
@@ -20,14 +23,26 @@ public final class LateInterest {
         return (int) Math.max(0, ChronoUnit.DAYS.between(dueDate, paymentDate));
     }
 
-    public static PaymentQuote quote(BigDecimal amount, LocalDate dueDate, LocalDate paymentDate, EffectiveRate lateRate) {
+    /**
+     * @param amount   D: cuota exigible (interés + capital)
+     * @param interest interés compensatorio incluido en D
+     * @param lateRate tasa moratoria; solo se usa si hay días de atraso (obligatoria en ese caso)
+     */
+    public static PaymentQuote quote(BigDecimal amount, BigDecimal interest, LocalDate dueDate, LocalDate paymentDate, EffectiveRate lateRate) {
         int days = lateDays(dueDate, paymentDate);
+        var d = Rounding.money(amount);
+        var compensatory = Rounding.money(interest);
+        if (days == 0) {
+            var zero = Rounding.money(BigDecimal.ZERO);
+            return new PaymentQuote(d, 0, null, BigDecimal.ZERO.setScale(Rounding.RATE_SCALE), zero, d, zero, compensatory,
+                    Rounding.money(d.subtract(compensatory)));
+        }
+        if (lateRate == null) throw new IllegalArgumentException("Ingresa la tasa moratoria: el pago está vencido.");
         var ted = lateRate.toDaily();
-        var interest = days > 0
-                ? Rounding.money(amount.multiply(BigDecimal.valueOf(Math.pow(1 + ted.doubleValue(), days) - 1)))
-                : Rounding.money(BigDecimal.ZERO);
-        var total = Rounding.money(amount.add(interest));
-        return new PaymentQuote(Rounding.money(amount), days, ted, interest, total, interest, Rounding.money(total.subtract(interest)));
+        var factor = BigDecimal.ONE.add(ted).pow(days, MathContext.DECIMAL128).subtract(BigDecimal.ONE);
+        var late = Rounding.money(d.multiply(factor));
+        var total = Rounding.money(d.add(late));
+        return new PaymentQuote(d, days, lateRate, ted, late, total, late, compensatory, Rounding.money(d.subtract(compensatory)));
     }
 
     /** No se aceptan pagos parciales: el monto debe ser igual al total exigible. */

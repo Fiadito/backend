@@ -42,16 +42,18 @@ public class PaymentsController {
                 .map(o -> BillingResourceAssembler.toResource(o, memberNames, productNames, today)).toList();
     }
 
-    @Operation(summary = "Calcula días de mora, interés moratorio, total exigible e imputación")
+    @Operation(summary = "Calcula el total exigible e imputación; si está vencida, la mora con la tasa moratoria indicada (TEA 60 % por defecto)")
     @PostMapping("/pagos/cotizacion")
     public QuoteResource quote(@AuthenticationPrincipal CurrentUser user, @RequestBody QuoteRequestResource body) {
-        var quoted = commandService.handle(new QuotePaymentCommand(user.businessId(), body.idVenta(), body.idCuota(), body.fechaPagoReal()));
+        var quoted = commandService.handle(new QuotePaymentCommand(user.businessId(), body.idVenta(), body.idCuota(), body.fechaPagoReal(),
+                body.periodoTasaMora(), body.valorTasaMora()));
         var o = quoted.obligation();
         var q = quoted.quote();
         var member = membership.findMember(user.businessId(), o.memberId()).orElseThrow();
         return new QuoteResource(o.sale().getId(), o.installment() == null ? null : o.installment().getId(), member.getFullName(), o.label(),
-                o.dueDate(), body.fechaPagoReal(), q.amount(), q.lateDays(), member.getLateRatePeriod().name(), member.getLateRateValue(),
-                q.dailyRate(), q.lateInterest(), q.total(), q.lateImputation(), q.capitalImputation());
+                o.dueDate(), body.fechaPagoReal(), q.amount(), o.interest(), o.capital(), q.isLate(), q.lateDays(),
+                q.lateRate() == null ? null : q.lateRate().period().name(), q.lateRate() == null ? null : q.lateRate().value(),
+                q.dailyRate(), q.lateInterest(), q.total(), q.lateImputation(), q.interestImputation(), q.capitalImputation());
     }
 
     @Operation(summary = "Registra el pago completo de una obligación (no acepta pagos parciales)")

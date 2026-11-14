@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * Entidad CUOTA: una cuota quincenal del plan de pagos de una venta.
+ * Entidad CUOTA: una cuota quincenal del plan de pagos de una venta (interés + amortización).
  */
 @Entity
 @Table(name = "cuota", uniqueConstraints = @UniqueConstraint(name = "uk_cuota_venta_numero", columnNames = {"id_venta", "numero"}))
@@ -37,6 +37,10 @@ public class Installment {
     @Column(name = "saldo_inicial", nullable = false, precision = 10, scale = 2)
     private BigDecimal openingBalance;
 
+    /** Interés compensatorio de la cuota: I = SI × TEQ. */
+    @Column(name = "interes", nullable = false, precision = 10, scale = 2)
+    private BigDecimal interest;
+
     @Column(name = "amortizacion", nullable = false, precision = 10, scale = 2)
     private BigDecimal amortization;
 
@@ -54,11 +58,17 @@ public class Installment {
     public Installment(ScheduleRow row) {
         this.number = row.number();
         this.dueDate = row.dueDate();
+        this.status = DebtStatus.PENDIENTE;
+        reschedule(row);
+    }
+
+    /** Aplica los montos de una fila del plan (al crear la cuota o al recalcularla por cambio de tasa). */
+    public void reschedule(ScheduleRow row) {
         this.openingBalance = row.openingBalance();
+        this.interest = row.interest();
         this.amortization = row.amortization();
         this.amount = row.amount();
         this.closingBalance = row.closingBalance();
-        this.status = DebtStatus.PENDIENTE;
     }
 
     public boolean isPaid() {

@@ -13,6 +13,8 @@ import pe.edu.upc.fiadito.platform.billing.domain.model.valueobjects.PaymentMeth
 import pe.edu.upc.fiadito.platform.billing.domain.services.PaymentCommandService;
 import pe.edu.upc.fiadito.platform.catalog.domain.model.aggregates.Product;
 import pe.edu.upc.fiadito.platform.catalog.domain.model.commands.SaveProductCommand;
+import pe.edu.upc.fiadito.platform.catalog.domain.model.valueobjects.ComboItem;
+import pe.edu.upc.fiadito.platform.catalog.domain.model.valueobjects.ProductType;
 import pe.edu.upc.fiadito.platform.catalog.domain.model.valueobjects.SaleMode;
 import pe.edu.upc.fiadito.platform.catalog.domain.services.ProductCommandService;
 import pe.edu.upc.fiadito.platform.credit.domain.model.aggregates.CreditSale;
@@ -36,6 +38,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -115,50 +118,80 @@ public class FiaditoDataSeeder {
         for (Object[] p : catalog) {
             var price = new BigDecimal((String) p[3]);
             var supplier = "Fuerza Norte".equals(p[0]) ? "Fuerza Norte Gym" : "Distribuidora Deportiva SAC";
-            var saved = products.handle(new SaveProductCommand(bId, null, (String) p[2], (String) p[0], supplier, (String) p[1],
-                    "/images/products/" + p[4] + ".svg", price, price, SaleMode.AMBAS), actor, actorName);
-            productByName.put(p[0] + " " + p[2], saved);
+            var saved = products.handle(new SaveProductCommand(bId, null, ProductType.PRODUCTO, (String) p[2], (String) p[0], supplier,
+                    (String) p[1], "/images/products/" + p[4] + ".svg", price, price, SaleMode.AMBAS, List.of()), actor, actorName);
+            productByName.put(p[0] + "|" + p[1] + "|" + p[2], saved);
         }
 
-        // Socios
-        var carla = member(bId, "72458813", "Carla Mendoza Ríos", "987451220", "Calle Los Pinos 118, Los Olivos", "1000", "0.60", "carla.mendoza@correo.pe", actor, actorName);
-        var luis = member(bId, "70984512", "Luis Ramírez Paredes", "956321478", "Jr. Las Gardenias 230, Comas", "1000", "0.60", "luis.ramirez@correo.pe", actor, actorName);
-        member(bId, "43125678", "Ana Torres Vega", "945112233", "Av. Naranjal 845, Independencia", "800", "0.60", "ana.torres@correo.pe", actor, actorName);
-        var diego = member(bId, "87654321", "Diego Salazar Cruz", "912345678", "Calle Las Magnolias 77, Los Olivos", "600", "0.60", "diego.salazar@correo.pe", actor, actorName);
-        var jorge = member(bId, "98765432", "Jorge Castillo Rojas", "934567812", "Av. Carlos Izaguirre 1500, Los Olivos", "800", "0.50", "jorge.castillo@correo.pe", actor, actorName);
-        var maria = member(bId, "23456789", "María López Gómez", "967812345", "Jr. Huánuco 410, San Martín de Porres", "700", "0.60", null, actor, actorName);
-        member(bId, "30567891", "Valeria Núñez Soto", "978123456", "Calle Los Cedros 59, Los Olivos", "1000", "0.45", null, actor, actorName);
+        // Combos de S/ 100, 200 y 400: así las bebidas de S/ 2–5 llegan al mínimo de S/ 400 sin vender 100+ unidades sueltas
+        var hydration = combo(bId, "Combo Hidratación (20 Cielo + 24 Gatorade)", "100.00", List.of(
+                item(productByName, "Cielo|Botella|Agua mineral", 20), item(productByName, "Gatorade|Botella|Bebida rehidratante sabor Tropical", 24)),
+                actor, actorName);
+        combo(bId, "Combo Energía (28 X-B + 20 Volt)", "200.00", List.of(
+                item(productByName, "X-B|Botella|Bebida energizante sabor Piña", 20), item(productByName, "X-B|Botella|Bebida energizante sabor Guaraná", 8),
+                item(productByName, "Volt|Botella|Bebida energizante", 20)), actor, actorName);
+        combo(bId, "Combo Fit (90 Hey Fit + 10 barras)", "400.00", List.of(
+                item(productByName, "Hey Fit|Botella|Bebida funcional sabor Piña - Coco", 40),
+                item(productByName, "Hey Fit|Botella|Bebida funcional sabor Golden Fizz", 10),
+                item(productByName, "Hey Fit|Lata|Bebida funcional sabor Black Fizz", 40),
+                item(productByName, "Optimum Nutrition|Barra|Barra de proteína sabor Chocolate", 10)), actor, actorName);
+
+        // Socios (sin tasas: la tasa efectiva va en cada venta y la moratoria se coloca al pagar algo vencido)
+        var carla = member(bId, "72458813", "Carla Mendoza Ríos", "987451220", "Calle Los Pinos 118, Los Olivos", "1000", "carla.mendoza@correo.pe", actor, actorName);
+        var luis = member(bId, "70984512", "Luis Ramírez Paredes", "956321478", "Jr. Las Gardenias 230, Comas", "1000", "luis.ramirez@correo.pe", actor, actorName);
+        var ana = member(bId, "43125678", "Ana Torres Vega", "945112233", "Av. Naranjal 845, Independencia", "800", "ana.torres@correo.pe", actor, actorName);
+        var diego = member(bId, "87654321", "Diego Salazar Cruz", "912345678", "Calle Las Magnolias 77, Los Olivos", "600", "diego.salazar@correo.pe", actor, actorName);
+        var jorge = member(bId, "98765432", "Jorge Castillo Rojas", "934567812", "Av. Carlos Izaguirre 1500, Los Olivos", "800", "jorge.castillo@correo.pe", actor, actorName);
+        var maria = member(bId, "23456789", "María López Gómez", "967812345", "Jr. Huánuco 410, San Martín de Porres", "700", null, actor, actorName);
+        member(bId, "30567891", "Valeria Núñez Soto", "978123456", "Calle Los Cedros 59, Los Olivos", "1000", null, actor, actorName);
         members.handle(new ChangeMemberStatusCommand(bId, maria.getId(), RecordStatus.INACTIVO), actor, actorName);
 
-        // Jorge: 2 × MuscleTech (S/ 640) en 4 cuotas; pagó la cuota 1 con 2 días de atraso
-        var jorgeSale = sale(bId, jorge, productByName.get("MuscleTech Nitro-Tech Proteína whey con creatina 2 kg sabor Chocolate"), 2,
-                LocalDateTime.of(2026, 9, 20, 19, 0), PaymentMode.CUOTAS, 4, actor, actorName);
+        // Jorge: 2 × MuscleTech (S/ 640) en 4 cuotas a TEA 24 %; pagó la cuota 1 con 2 días de atraso (mora TEA 60 %)
+        var jorgeSale = sale(bId, jorge, productByName.get("MuscleTech Nitro-Tech|Frasco|Proteína whey con creatina 2 kg sabor Chocolate"), 2,
+                LocalDateTime.of(2026, 9, 20, 19, 0), PaymentMode.CUOTAS, 4, "0.24", actor, actorName);
         pay(bId, jorgeSale, 1, LocalDate.of(2026, 10, 2), PaymentMethod.YAPE, actor, actorName);
-        // Juego 2 (CP08–CP09): Luis, 100 × X-B Piña (S/ 500) en 8 cuotas; pagó la cuota 1 a tiempo
-        var luisSale = sale(bId, luis, productByName.get("X-B Bebida energizante sabor Piña"), 100,
-                LocalDateTime.of(2026, 10, 8, 10, 30), PaymentMode.CUOTAS, 8, actor, actorName);
+        // Juego 2 (CP08–CP09): Luis, 100 × X-B Piña (S/ 500) en 8 cuotas a TEA 20 %; pagó la cuota 1 a tiempo
+        var luisSale = sale(bId, luis, productByName.get("X-B|Botella|Bebida energizante sabor Piña"), 100,
+                LocalDateTime.of(2026, 10, 8, 10, 30), PaymentMode.CUOTAS, 8, "0.20", actor, actorName);
         pay(bId, luisSale, 1, LocalDate.of(2026, 10, 15), PaymentMethod.EFECTIVO, actor, actorName);
-        // Diego: Dymatize ISO100 (S/ 420) a pago único → paga el 30/10
-        sale(bId, diego, productByName.get("Dymatize ISO100 Proteína aislada de suero 2.5 kg sabor Vainilla"), 1,
-                LocalDateTime.of(2026, 10, 12, 17, 15), PaymentMode.PAGO_UNICO, 1, actor, actorName);
+        // Diego: Dymatize ISO100 (S/ 420) a pago único a TEA 18 % → vence el 30/10
+        sale(bId, diego, productByName.get("Dymatize ISO100|Bolsa|Proteína aislada de suero 2.5 kg sabor Vainilla"), 1,
+                LocalDateTime.of(2026, 10, 12, 17, 15), PaymentMode.PAGO_UNICO, 1, "0.18", actor, actorName);
+        // Ana: 4 × Combo Hidratación (S/ 400) en 4 cuotas a TEA 22 %
+        sale(bId, ana, hydration, 4, LocalDateTime.of(2026, 10, 20, 18, 30), PaymentMode.CUOTAS, 4, "0.22", actor, actorName);
         // Carla queda sin compras para ejecutar CP07 (juego 1) desde la web
         log.debug("Socio para CP07: {}", carla.getFullName());
     }
 
-    private Member member(Long bId, String dni, String name, String phone, String address, String limit, String rate, String email,
+    private Member member(Long bId, String dni, String name, String phone, String address, String limit, String email,
                           Long actor, String actorName) {
-        return members.handle(new CreateMemberCommand(bId, dni, name, phone, address, Currency.PEN, RatePeriod.TEA, new BigDecimal(rate),
-                new BigDecimal(limit), 8, email, email == null ? null : MEMBER_PASSWORD), actor, actorName);
+        return members.handle(new CreateMemberCommand(bId, dni, name, phone, address, Currency.PEN, new BigDecimal(limit), 8, email,
+                email == null ? null : MEMBER_PASSWORD), actor, actorName);
+    }
+
+    private Product combo(Long bId, String name, String price, List<ComboItem> items, Long actor, String actorName) {
+        var value = new BigDecimal(price);
+        return products.handle(new SaveProductCommand(bId, null, ProductType.COMBO, name, "Fuerza Norte", "Fuerza Norte Gym", "Combo",
+                "/images/products/combo.svg", value, value, SaleMode.AMBAS, items), actor, actorName);
+    }
+
+    /** @param key "marca|unidad|descripción" (hay bebidas con el mismo nombre en botella y en lata) */
+    private static ComboItem item(Map<String, Product> productByName, String key, int quantity) {
+        var product = productByName.get(key);
+        if (product == null) throw new IllegalStateException("Producto del combo no encontrado: " + key);
+        return new ComboItem(product.getId(), quantity);
     }
 
     private CreditSale sale(Long bId, Member member, Product product, int quantity, LocalDateTime when, PaymentMode mode, int n,
-                            Long actor, String actorName) {
-        return sales.handle(new RegisterSaleCommand(bId, new SaleRequest(member.getId(), product.getId(), quantity, when, mode, n)), actor, actorName);
+                            String tea, Long actor, String actorName) {
+        return sales.handle(new RegisterSaleCommand(bId, new SaleRequest(member.getId(), product.getId(), quantity, when, mode, n,
+                RatePeriod.TEA, new BigDecimal(tea))), actor, actorName);
     }
 
+    /** Paga una cuota con su total; si está vencida usa la tasa moratoria por defecto (TEA 60 %). */
     private void pay(Long bId, CreditSale sale, int number, LocalDate date, PaymentMethod method, Long actor, String actorName) {
         var installmentId = sale.getInstallments().stream().filter(i -> i.getNumber() == number).findFirst().orElseThrow().getId();
-        var quote = payments.handle(new QuotePaymentCommand(bId, sale.getId(), installmentId, date)).quote();
-        payments.handle(new RegisterPaymentCommand(bId, sale.getId(), installmentId, date, method, quote.total()), actor, actorName);
+        var quote = payments.handle(new QuotePaymentCommand(bId, sale.getId(), installmentId, date, null, null)).quote();
+        payments.handle(new RegisterPaymentCommand(bId, sale.getId(), installmentId, date, method, quote.total(), null, null), actor, actorName);
     }
 }
