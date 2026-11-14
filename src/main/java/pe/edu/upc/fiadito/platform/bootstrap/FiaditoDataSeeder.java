@@ -42,7 +42,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Datos iniciales cuando la base está vacía: Fuerza Norte Gym, los productos de la Tabla 4 del informe,
+ * Datos iniciales cuando la base está vacía: Fuerza Norte Gym, un catálogo de productos reales (bebidas por paquete y suplementos),
  * siete socios y los juegos de prueba (sección 6 d). Usa los mismos servicios de la API, así los
  * cálculos y la bitácora son reales. Desactívalo con SEED_ENABLED=false.
  */
@@ -85,33 +85,48 @@ public class FiaditoDataSeeder {
         Long actor = userRepository.findByEmail(BUSINESS_EMAIL).orElseThrow().getId();
         String actorName = "Josué Flores";
 
-        // Productos de la Tabla 4
+        // Catálogo con productos reales y precios de referencia del mercado peruano (nov. 2026). Las bebidas de S/ 2–5
+        // ya no se venden sueltas sino por paquete; los suplementos van por pote o bolsa.
         Object[][] catalog = {
-                {"Cielo", "Botella", "Agua mineral", "2.00", "agua"},
-                {"Cielo", "Botella", "Agua mineral 1 litro", "2.50", "agua"},
-                {"Hey Fit", "Botella", "Bebida funcional sabor Piña - Coco", "3.00", "bebida"},
-                {"Hey Fit", "Botella", "Bebida funcional sabor Toronja - Camu Camu", "3.00", "bebida"},
-                {"Hey Fit", "Botella", "Bebida funcional sabor Golden Fizz", "3.00", "bebida"},
-                {"Hey Fit", "Botella", "Bebida funcional sabor Black Fizz", "3.00", "bebida"},
-                {"Hey Fit", "Lata", "Bebida funcional sabor Piña - Coco", "3.50", "lata"},
-                {"Hey Fit", "Lata", "Bebida funcional sabor Toronja - Camu Camu", "3.50", "lata"},
-                {"Hey Fit", "Lata", "Bebida funcional sabor Golden Fizz", "3.50", "lata"},
-                {"Hey Fit", "Lata", "Bebida funcional sabor Black Fizz", "3.50", "lata"},
-                {"Gatorade", "Botella", "Bebida rehidratante sabor Tropical", "2.50", "bebida"},
-                {"Gatorade", "Botella", "Bebida rehidratante sabor Ponche de Frutas", "2.50", "bebida"},
-                {"Volt", "Botella", "Bebida energizante", "3.00", "energizante"},
-                {"Volt", "Lata", "Bebida energizante", "3.50", "lata"},
-                {"X-B", "Botella", "Bebida energizante sabor Piña", "5.00", "energizante"},
-                {"X-B", "Botella", "Bebida energizante sabor Guaraná", "5.00", "energizante"},
-                {"X-B", "Botella", "Bebida energizante sabor Blueberry", "5.00", "energizante"},
-                {"Optimum Nutrition", "Frasco", "Proteína whey 1 kg sabor Chocolate", "185.00", "proteina"},
-                {"Optimum Nutrition", "Frasco", "Proteína whey 1 kg sabor Vainilla", "185.00", "proteina"},
-                {"Optimum Nutrition", "Bolsa", "Proteína whey 2.5 kg sabor Chocolate", "395.00", "proteina"},
-                {"Dymatize ISO100", "Bolsa", "Proteína aislada de suero 2.5 kg sabor Vainilla", "420.00", "proteina"},
-                {"MuscleTech Nitro-Tech", "Frasco", "Proteína whey con creatina 2 kg sabor Chocolate", "320.00", "proteina"},
-                {"Optimum Nutrition", "Barra", "Barra de proteína sabor Chocolate", "11.00", "barra"},
-                {"Quest", "Barra", "Barra de proteína sabor Cookies & Cream", "12.00", "barra"},
-                {"Optimum Nutrition", "Pote", "Creatina monohidratada 300 g", "110.00", "creatina"},
+                // Hidratación
+                {"Cielo", "Paquete x15", "Agua sin gas 625 ml", "14.90", "agua"},
+                {"Cielo", "Paquete x12", "Agua sin gas 1 L", "19.90", "agua"},
+                {"Gatorade", "Paquete x12", "Bebida rehidratante 500 ml sabor Tropical Fruit", "34.90", "bebida"},
+                {"Gatorade", "Paquete x12", "Bebida rehidratante 500 ml sabor Mandarina", "34.90", "bebida"},
+                {"Gatorade", "Paquete x12", "Bebida rehidratante 500 ml sabor Cool Blue", "34.90", "bebida"},
+                {"Hey Fit", "Paquete x12", "Bebida funcional sabor Piña - Coco", "33.90", "bebida"},
+                {"Hey Fit", "Paquete x12", "Bebida funcional sabor Toronja - Camu Camu", "33.90", "bebida"},
+                {"Hey Fit", "Pack x6", "Bebida funcional en lata sabor Golden Fizz", "19.90", "lata"},
+                {"Hey Fit", "Pack x6", "Bebida funcional en lata sabor Black Fizz", "19.90", "lata"},
+                // Energizantes
+                {"Volt", "Paquete x12", "Bebida energizante 300 ml sabor Yellow", "26.90", "energizante"},
+                {"Volt", "Paquete x12", "Bebida energizante 300 ml sabor Blueberry Maca", "26.90", "energizante"},
+                {"Volt", "Pack x6", "Bebida energizante en lata 473 ml sabor Pink", "27.90", "lata"},
+                {"X-B", "Paquete x12", "Bebida energizante sabor Piña", "55.00", "energizante"},
+                {"X-B", "Paquete x12", "Bebida energizante sabor Guaraná", "55.00", "energizante"},
+                {"Red Bull", "Pack x6", "Bebida energizante en lata 250 ml", "36.50", "lata"},
+                {"Cellucor C4", "Pack x12", "Pre entreno C4 Energy en lata 473 ml sabor Midnight Cherry", "159.00", "lata"},
+                // Proteínas
+                {"Optimum Nutrition", "Pote", "Proteína Gold Standard 100% Whey 2 lb sabor Double Rich Chocolate", "229.00", "proteina"},
+                {"Optimum Nutrition", "Pote", "Proteína Gold Standard 100% Whey 2 lb sabor Vanilla Ice Cream", "229.00", "proteina"},
+                {"Optimum Nutrition", "Pote", "Proteína Gold Standard 100% Whey 5 lb sabor Double Rich Chocolate", "449.00", "proteina"},
+                {"Optimum Nutrition", "Pote", "Proteína Gold Standard 100% Isolate 5 lb sabor Chocolate Bliss", "539.00", "proteina"},
+                {"Optimum Nutrition", "Pote", "Proteína Platinum Hydrowhey 3.5 lb sabor Turbo Chocolate", "429.00", "proteina"},
+                {"Optimum Nutrition", "Bolsa", "Ganador de peso Serious Mass 12 lb sabor Chocolate", "329.00", "proteina"},
+                {"Dymatize", "Pote", "Proteína aislada ISO100 5 lb sabor Gourmet Vanilla", "679.00", "proteina"},
+                {"MuscleTech", "Pote", "Proteína Nitro-Tech Performance 4 lb sabor Milk Chocolate", "320.00", "proteina"},
+                {"MuscleTech", "Pote", "Proteína Nitro-Tech Whey Gold 5 lb sabor Double Rich Chocolate", "359.00", "proteina"},
+                {"Optimum Nutrition", "Pack x4", "Gold Standard Protein Shake 325 ml sabor Chocolate", "79.00", "bebida"},
+                // Creatinas y pre entrenos
+                {"Optimum Nutrition", "Pote", "Creatina monohidratada micronizada 300 g", "139.00", "creatina"},
+                {"Optimum Nutrition", "Pote", "Creatina monohidratada micronizada 600 g", "250.00", "creatina"},
+                {"Optimum Nutrition", "Pote", "Creatina monohidratada micronizada 1.2 kg", "359.00", "creatina"},
+                {"MuscleTech", "Pote", "Creatina Platinum 100% Creatine 400 g", "179.00", "creatina"},
+                {"Cellucor C4", "Pote", "Pre entreno C4 Original 30 servicios sabor Fruit Punch", "179.00", "creatina"},
+                {"Cellucor C4", "Pote", "Pre entreno C4 Original 50 servicios sabor Fruit Punch", "259.00", "creatina"},
+                // Barras y accesorios
+                {"Quest", "Caja x12", "Barra de proteína sabor Cookies & Cream", "139.00", "barra"},
+                {"Optimum Nutrition", "Caja x10", "Barra de proteína Protein Bar sabor Chocolate", "99.00", "barra"},
                 {"Fuerza Norte", "Unidad", "Shaker mezclador de 600 ml", "25.00", "shaker"}
         };
         Map<String, Product> productByName = new HashMap<>();
@@ -120,42 +135,60 @@ public class FiaditoDataSeeder {
             var supplier = "Fuerza Norte".equals(p[0]) ? "Fuerza Norte Gym" : "Distribuidora Deportiva SAC";
             var saved = products.handle(new SaveProductCommand(bId, null, ProductType.PRODUCTO, (String) p[2], (String) p[0], supplier,
                     (String) p[1], "/images/products/" + p[4] + ".svg", price, price, SaleMode.AMBAS, List.of()), actor, actorName);
-            productByName.put(p[0] + "|" + p[1] + "|" + p[2], saved);
+            productByName.put(p[0] + "|" + p[2], saved);
         }
 
-        // Combos de S/ 100, 200 y 400: así las bebidas de S/ 2–5 llegan al mínimo de S/ 400 sin vender 100+ unidades sueltas
-        var hydration = combo(bId, "Combo Hidratación (20 Cielo + 24 Gatorade)", "100.00", List.of(
-                item(productByName, "Cielo|Botella|Agua mineral", 20), item(productByName, "Gatorade|Botella|Bebida rehidratante sabor Tropical", 24)),
-                actor, actorName);
-        combo(bId, "Combo Energía (28 X-B + 20 Volt)", "200.00", List.of(
-                item(productByName, "X-B|Botella|Bebida energizante sabor Piña", 20), item(productByName, "X-B|Botella|Bebida energizante sabor Guaraná", 8),
-                item(productByName, "Volt|Botella|Bebida energizante", 20)), actor, actorName);
-        combo(bId, "Combo Fit (90 Hey Fit + 10 barras)", "400.00", List.of(
-                item(productByName, "Hey Fit|Botella|Bebida funcional sabor Piña - Coco", 40),
-                item(productByName, "Hey Fit|Botella|Bebida funcional sabor Golden Fizz", 10),
-                item(productByName, "Hey Fit|Lata|Bebida funcional sabor Black Fizz", 40),
-                item(productByName, "Optimum Nutrition|Barra|Barra de proteína sabor Chocolate", 10)), actor, actorName);
+        // Combos a precio fijo (S/ 100, 200 o 400), siempre por debajo de lo que costaría su contenido por separado.
+        // Combo Hidratación: 3 × Cielo x15 + 2 × Gatorade x12 (S/ 114.50 por separado)
+        var hydration = combo(bId, "Combo Hidratación (3 paquetes Cielo + 2 paquetes Gatorade)", "100.00", List.of(
+                item(productByName, "Cielo|Agua sin gas 625 ml", 3),
+                item(productByName, "Gatorade|Bebida rehidratante 500 ml sabor Tropical Fruit", 2)), actor, actorName);
+        // Combo Energía: 4 × Volt x12 + 2 × Red Bull x6 + 1 × X-B x12 (S/ 235.60)
+        combo(bId, "Combo Energía (4 paquetes Volt + 2 packs Red Bull + 1 paquete X-B)", "200.00", List.of(
+                item(productByName, "Volt|Bebida energizante 300 ml sabor Yellow", 4),
+                item(productByName, "Red Bull|Bebida energizante en lata 250 ml", 2),
+                item(productByName, "X-B|Bebida energizante sabor Piña", 1)), actor, actorName);
+        // Combo Proteína Gold: ON Whey 2 lb + ON Creatina 300 g + Protein Shake x4 + shaker (S/ 472.00)
+        combo(bId, "Combo Proteína Gold (ON Whey 2 lb + Creatina 300 g + Shake x4 + shaker)", "400.00", List.of(
+                item(productByName, "Optimum Nutrition|Proteína Gold Standard 100% Whey 2 lb sabor Double Rich Chocolate", 1),
+                item(productByName, "Optimum Nutrition|Creatina monohidratada micronizada 300 g", 1),
+                item(productByName, "Optimum Nutrition|Gold Standard Protein Shake 325 ml sabor Chocolate", 1),
+                item(productByName, "Fuerza Norte|Shaker mezclador de 600 ml", 1)), actor, actorName);
+        // Combo Pre entreno: C4 Original 30 serv + Platinum Creatine + Volt lata x6 + shaker (S/ 410.90)
+        combo(bId, "Combo Pre entreno (C4 Original + Creatina Platinum + Volt x6 + shaker)", "400.00", List.of(
+                item(productByName, "Cellucor C4|Pre entreno C4 Original 30 servicios sabor Fruit Punch", 1),
+                item(productByName, "MuscleTech|Creatina Platinum 100% Creatine 400 g", 1),
+                item(productByName, "Volt|Bebida energizante en lata 473 ml sabor Pink", 1),
+                item(productByName, "Fuerza Norte|Shaker mezclador de 600 ml", 1)), actor, actorName);
+        // Combo Fit: 4 × Hey Fit x12 + caja Quest x12 + caja ON x10 + Cielo x15 + shaker (S/ 413.50)
+        combo(bId, "Combo Fit (4 paquetes Hey Fit + 2 cajas de barras + agua + shaker)", "400.00", List.of(
+                item(productByName, "Hey Fit|Bebida funcional sabor Piña - Coco", 2),
+                item(productByName, "Hey Fit|Bebida funcional sabor Toronja - Camu Camu", 2),
+                item(productByName, "Quest|Barra de proteína sabor Cookies & Cream", 1),
+                item(productByName, "Optimum Nutrition|Barra de proteína Protein Bar sabor Chocolate", 1),
+                item(productByName, "Cielo|Agua sin gas 625 ml", 1),
+                item(productByName, "Fuerza Norte|Shaker mezclador de 600 ml", 1)), actor, actorName);
 
         // Socios (sin tasas: la tasa efectiva va en cada venta y la moratoria se coloca al pagar algo vencido)
         var carla = member(bId, "72458813", "Carla Mendoza Ríos", "987451220", "Calle Los Pinos 118, Los Olivos", "1000", "carla.mendoza@correo.pe", actor, actorName);
         var luis = member(bId, "70984512", "Luis Ramírez Paredes", "956321478", "Jr. Las Gardenias 230, Comas", "1000", "luis.ramirez@correo.pe", actor, actorName);
         var ana = member(bId, "43125678", "Ana Torres Vega", "945112233", "Av. Naranjal 845, Independencia", "800", "ana.torres@correo.pe", actor, actorName);
-        var diego = member(bId, "87654321", "Diego Salazar Cruz", "912345678", "Calle Las Magnolias 77, Los Olivos", "600", "diego.salazar@correo.pe", actor, actorName);
+        var diego = member(bId, "87654321", "Diego Salazar Cruz", "912345678", "Calle Las Magnolias 77, Los Olivos", "800", "diego.salazar@correo.pe", actor, actorName);
         var jorge = member(bId, "98765432", "Jorge Castillo Rojas", "934567812", "Av. Carlos Izaguirre 1500, Los Olivos", "800", "jorge.castillo@correo.pe", actor, actorName);
         var maria = member(bId, "23456789", "María López Gómez", "967812345", "Jr. Huánuco 410, San Martín de Porres", "700", null, actor, actorName);
         member(bId, "30567891", "Valeria Núñez Soto", "978123456", "Calle Los Cedros 59, Los Olivos", "1000", null, actor, actorName);
         members.handle(new ChangeMemberStatusCommand(bId, maria.getId(), RecordStatus.INACTIVO), actor, actorName);
 
-        // Jorge: 2 × MuscleTech (S/ 640) en 4 cuotas a TEA 24 %; pagó la cuota 1 con 2 días de atraso (mora TEA 60 %)
-        var jorgeSale = sale(bId, jorge, productByName.get("MuscleTech Nitro-Tech|Frasco|Proteína whey con creatina 2 kg sabor Chocolate"), 2,
+        // Jorge: 2 × Nitro-Tech Performance 4 lb (S/ 640) en 4 cuotas a TEA 24 %; pagó la cuota 1 con 2 días de atraso (mora TEA 60 %)
+        var jorgeSale = sale(bId, jorge, productByName.get("MuscleTech|Proteína Nitro-Tech Performance 4 lb sabor Milk Chocolate"), 2,
                 LocalDateTime.of(2026, 9, 20, 19, 0), PaymentMode.CUOTAS, 4, "0.24", actor, actorName);
         pay(bId, jorgeSale, 1, LocalDate.of(2026, 10, 2), PaymentMethod.YAPE, actor, actorName);
-        // Juego 2 (CP08–CP09): Luis, 100 × X-B Piña (S/ 500) en 8 cuotas a TEA 20 %; pagó la cuota 1 a tiempo
-        var luisSale = sale(bId, luis, productByName.get("X-B|Botella|Bebida energizante sabor Piña"), 100,
+        // Juego 2 (CP08–CP09): Luis, 2 × ON Creatina 600 g (S/ 500) en 8 cuotas a TEA 20 %; pagó la cuota 1 a tiempo
+        var luisSale = sale(bId, luis, productByName.get("Optimum Nutrition|Creatina monohidratada micronizada 600 g"), 2,
                 LocalDateTime.of(2026, 10, 8, 10, 30), PaymentMode.CUOTAS, 8, "0.20", actor, actorName);
         pay(bId, luisSale, 1, LocalDate.of(2026, 10, 15), PaymentMethod.EFECTIVO, actor, actorName);
-        // Diego: Dymatize ISO100 (S/ 420) a pago único a TEA 18 % → vence el 30/10
-        sale(bId, diego, productByName.get("Dymatize ISO100|Bolsa|Proteína aislada de suero 2.5 kg sabor Vainilla"), 1,
+        // Diego: Dymatize ISO100 5 lb (S/ 679) a pago único a TEA 18 % → vence el 30/10
+        sale(bId, diego, productByName.get("Dymatize|Proteína aislada ISO100 5 lb sabor Gourmet Vanilla"), 1,
                 LocalDateTime.of(2026, 10, 12, 17, 15), PaymentMode.PAGO_UNICO, 1, "0.18", actor, actorName);
         // Ana: 4 × Combo Hidratación (S/ 400) en 4 cuotas a TEA 22 %
         sale(bId, ana, hydration, 4, LocalDateTime.of(2026, 10, 20, 18, 30), PaymentMode.CUOTAS, 4, "0.22", actor, actorName);
@@ -175,7 +208,7 @@ public class FiaditoDataSeeder {
                 "/images/products/combo.svg", value, value, SaleMode.AMBAS, items), actor, actorName);
     }
 
-    /** @param key "marca|unidad|descripción" (hay bebidas con el mismo nombre en botella y en lata) */
+    /** @param key "marca|descripción" */
     private static ComboItem item(Map<String, Product> productByName, String key, int quantity) {
         var product = productByName.get(key);
         if (product == null) throw new IllegalStateException("Producto del combo no encontrado: " + key);

@@ -13,7 +13,7 @@ igual que el frontend.
 4. API: `http://localhost:8080/api/v1` · Swagger: `http://localhost:8080/swagger-ui.html`
 
 La primera vez crea las tablas del informe (NEGOCIO, USUARIO, SOCIO, PRODUCTO, COMBO_ITEM, VENTA, CUOTA, PAGO, BITACORA), sus claves
-foráneas y restricciones CHECK, y carga los datos iniciales (Fuerza Norte Gym, los productos de la Tabla 4, 3 combos y los juegos de prueba).
+foráneas y restricciones CHECK, y carga los datos iniciales (Fuerza Norte Gym, 35 productos reales (bebidas por paquete, proteínas, creatinas y pre entrenos), 5 combos y los juegos de prueba).
 
 > **Si ya tenías la base `fiadito` de la versión anterior, bórrala una vez** (`DROP DATABASE fiadito;` en MySQL Workbench) y vuelve
 > a ejecutar el backend: las tasas pasaron del SOCIO a la VENTA y al PAGO, y `ddl-auto=update` no quita las columnas viejas.

@@ -98,10 +98,10 @@ class ApiFlowTests {
     void cp07_cp06_cp08_cp09_cp10_cp11_cp12() throws Exception {
         var token = login("josue.flores@fuerzanorte.pe", "Fiadito2026!");
         long carlaId = memberId(token, "72458813"), luisId = memberId(token, "70984512");
-        long xbId = productId(token, "Bebida energizante sabor Piña");
+        long creatinaId = productId(token, "Creatina monohidratada micronizada 600 g"); // S/ 250
 
         // CP07: juego 1 con TEA 20 % → método francés: cuota S/ 64.66, interés total S/ 17.32
-        var sale = "{\"idSocio\":" + carlaId + ",\"idProducto\":" + xbId + ",\"cantidad\":100,\"fechaHoraCompra\":\"2026-10-05T10:00\","
+        var sale = "{\"idSocio\":" + carlaId + ",\"idProducto\":" + creatinaId + ",\"cantidad\":2,\"fechaHoraCompra\":\"2026-10-05T10:00\","
                 + "\"modalidad\":\"CUOTAS\",\"nCuotas\":8,\"periodoTasa\":\"TEA\",\"valorTasa\":0.20}";
         send("POST", token, "/api/v1/ventas", sale.replace("0.20}", "0.60}"), status().isBadRequest()); // tasa fuera de 15–27 %
         var created = send("POST", token, "/api/v1/ventas", sale, status().isCreated());
@@ -115,7 +115,7 @@ class ApiFlowTests {
         long carlaSale = created.get("id").asLong();
 
         // CP06: crédito insuficiente (el límite se compara con el capital)
-        send("POST", token, "/api/v1/ventas", sale.replace("\"cantidad\":100", "\"cantidad\":120"), status().isBadRequest());
+        send("POST", token, "/api/v1/ventas", sale.replace("\"cantidad\":2", "\"cantidad\":3"), status().isBadRequest());
 
         // CP08: reporte del corte 25/10/2026
         var report = getJson(token, "/api/v1/reportes/corte?fecha=2026-10-25");
@@ -199,7 +199,8 @@ class ApiFlowTests {
         var token = login("josue.flores@fuerzanorte.pe", "Fiadito2026!");
         var combos = new java.util.ArrayList<JsonNode>();
         getJson(token, "/api/v1/productos").forEach(p -> { if (p.get("tipo").asText().equals("COMBO")) combos.add(p); });
-        assertThat(combos).extracting(c -> c.get("precioLista").decimalValue().intValue()).containsExactlyInAnyOrder(100, 200, 400);
+        assertThat(combos).extracting(c -> c.get("precioLista").decimalValue().intValue()).containsOnly(100, 200, 400);
+        assertThat(combos).filteredOn(c -> c.get("precioLista").decimalValue().intValue() > 300).hasSizeGreaterThanOrEqualTo(3);
         assertThat(combos).allSatisfy(c -> assertThat(c.get("items").size()).isGreaterThan(0));
 
         long valeria = memberId(token, "30567891");
